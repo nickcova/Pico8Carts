@@ -8,6 +8,13 @@ score=0
 game_over=false
 frame_count=0
 spawn_utensil=false
+spawn_wait=75 -- 2.5 segundos
+max_utensils=1
+
+up=0
+down=1
+right=2
+left=3
 
 -- setup stuff
 function _init()
@@ -18,18 +25,19 @@ end
 -- update logic
 function _update()
 	if not (game_over) then
- 	move_pizza()
- 	pizza_boundary_check()
- 	move_utensils()
- 	pizza_collision_chk()
- 	update_utensils()
- 	update_score()
+		move_pizza()
+		pizza_boundary_check()
+		move_utensils()
+		pizza_collision_chk()
+		update_utensils()
+		update_score()
+		update_frame_count()
 	end
 end
 
 -- update graphics on screen
 function _draw()
-	cls()
+	cls(1)
 	draw_pizza()
 	draw_utensils()
 	draw_score()
@@ -84,44 +92,95 @@ function utensils_init()
 	local knife={}
 	knife.sprite=2
 	knife.x=-8
-	knife.y=60  --flr(rnd(128))
+	knife.y=flr(rnd(120))  --60 es la mitad
 	knife.speed=2
-	knife.hitbox={x=0,y=2,w=8,h=3}
-	
+	knife.direction=right --first one goes right
+	knife.hitbox={x=0,y=2,w=8,h=3}	
 	add(utensils,knife)
 end
 
 function move_utensils()
 	for ut in all(utensils) do
-		ut.x+=ut.speed
-		if (ut.x>=128) del(utensils,ut)
+		if (ut.direction==right) ut.x+=ut.speed
+		if (ut.direction==left) ut.x-=ut.speed
+		if (ut.direction==up) ut.y-=ut.speed
+		if (ut.direction==down) ut.y+=ut.speed
+
+		if (ut.x>=128 or ut.x<=-9) del(utensils,ut)
+		if (ut.y>=128 or ut.y<=-9) del(utensils,ut)
 	end
 end
 
 function update_utensils()
-	if (#utensils<20 and spawn_utensil) then
+	-- Check if I have to add a new utensil
+	if (#utensils<=max_utensils) then
+		if (frame_count>0 and frame_count%spawn_wait==0) spawn_utensil=true
+	end	
+
+	if (spawn_utensil) then
+		local starting_position = getStartingPosition()
+
 		local knife={}
- 	knife.sprite=2
- 	knife.x=-8
- 	knife.y=flr(rnd(128))
- 	knife.speed=2
- 	add(utensils,knife)
+		knife.sprite=starting_position.sprite
+		knife.x=starting_position.x
+		knife.y=starting_position.y
+		knife.speed=2
+		knife.direction=starting_position.direction
+		knife.hitbox={x=0,y=2,w=8,h=3}
+		add(utensils,knife)
+
+		spawn_utensil = false
 	end
+end
+
+function getStartingPosition()
+	local position = {}
+
+	local direction = flr(rnd(4))
+
+	if (direction==up) then
+		position.sprite=3
+		position.direction=up
+		position.y=127
+		position.x=flr(rnd(120))
+	end
+
+	if (direction==down) then
+		position.sprite=3
+		position.direction=down
+		position.y=-8
+		position.x=flr(rnd(120))
+	end
+
+	if (direction==right) then
+		position.sprite=2
+		position.direction=right
+		position.y=flr(rnd(120))
+		position.x=-8
+	end
+
+	if (direction==left) then
+		position.sprite=2
+		position.direction=left
+		position.y=flr(rnd(120))
+		position.x=127
+	end
+
+	return position
 end
 
 function draw_utensils()
 	for ut in all(utensils) do
-		spr(ut.sprite,ut.x,ut.y)
+		if (ut.direction==right) spr(ut.sprite,ut.x,ut.y)
+		if (ut.direction==left) spr(ut.sprite,ut.x,ut.y,1,1,true)
+		if (ut.direction==up) spr(ut.sprite,ut.x,ut.y,1,1,false,true)
+		if (ut.direction==down) spr(ut.sprite,ut.x,ut.y)
 	end
 end
 -->8
 -- gui functions
 function update_score()
-	if (frame_count==59) then
-		score+=1
-		frame_count=0
-	end
-	if (frame_count<59) frame_count+=1
+	if (frame_count%59==0) score+=1	
 end
 
 function draw_score()
@@ -130,29 +189,37 @@ end
 
 function debug()
 	print("utensils: "..#utensils,0,0,10)
-	print("game_over: "..tostr(game_over),0,10,10)
-	print("pizza hitboxes: "..#pizza.hitboxes,0,20,10)
+	--print("game_over: "..tostr(game_over),0,10,10)
+	--print("pizza hitboxes: "..#pizza.hitboxes,0,20,10)
 end
 -->8
 -- other functions
 function overlap_exists(player_x,player_y,player_hb,enemy_x,enemy_y,enemy_hb)
 	if (
-					player_x+player_hb.x<=enemy_x+enemy_hb.x+enemy_hb.w
-					and player_x+player_hb.x+player_hb.w>=enemy_x+enemy_hb.x
-					and player_y+player_hb.y<=enemy_y+enemy_hb.y+enemy_hb.h
-					and player_y+player_hb.y+player_hb.h>=enemy_y+enemy_hb.y+enemy_hb.h
-					) then
+		player_x+player_hb.x<=enemy_x+enemy_hb.x+enemy_hb.w
+		and player_x+player_hb.x+player_hb.w>=enemy_x+enemy_hb.x
+		and player_y+player_hb.y<=enemy_y+enemy_hb.y+enemy_hb.h
+		and player_y+player_hb.y+player_hb.h>=enemy_y+enemy_hb.y+enemy_hb.h
+	) then
 		return true
 	end
 	
 	return false	
 end
+
+function update_frame_count()
+	if (frame_count<32767) then
+		frame_count+=1
+	else
+		frame_count=0
+	end
+end
 __gfx__
-00000000044444400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000449399440000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00700700a98899990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00077000a98899394445555600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000770000a999990fff5556000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0070070000a988000006660000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000b988000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000a90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000444444000000000000f4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000004493994400000000000f4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00700700a988999900000000000f4000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00077000a98899394445555600655000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000770000a999990fff5556000655000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0070070000a988000006660000655000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000b988000000000000065000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000a90000000000000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
