@@ -47,17 +47,29 @@ end
 -->8
 -- player functions
 function make_pizza()
-	pizza.x=60
-	pizza.y=60
-	pizza.sprite=1
+	pizza.x=56
+	pizza.y=56
+	pizza.sprite=16
 	pizza.speed=2
 	pizza.hitboxes={}
-	add(pizza.hitboxes,{x=0,y=0,w=8,h=5})
-	add(pizza.hitboxes,{x=3,y=6,w=4,h=3})
+	add(pizza.hitboxes,{x=0,y=0,w=16,h=10})
+	add(pizza.hitboxes,{x=3,y=6,w=8,h=6})
 end
 
 function draw_pizza()
-	spr(pizza.sprite,pizza.x,pizza.y)
+	if(btn(0)) then 
+		pizza.sprite=18
+	elseif(btn(1)) then 
+		pizza.sprite=20
+	elseif(btn(2)) then 
+		pizza.sprite=22
+	elseif(btn(3)) then 
+		pizza.sprite=24
+	else
+		pizza.sprite=16
+	end
+
+	spr(pizza.sprite,pizza.x,pizza.y,2,2)
 end
 
 function move_pizza()
@@ -69,9 +81,9 @@ end
 
 function pizza_boundary_check()
 	if (pizza.x<=0) pizza.x=0
-	if (pizza.x+8>=128) pizza.x=120
+	if (pizza.x+16>=128) pizza.x=120
 	if (pizza.y<=0) pizza.y=0
-	if (pizza.y+8>=128) pizza.y=120
+	if (pizza.y+16>=128) pizza.y=120
 end
 
 function pizza_collision_chk()
