@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
-version 16
+version 18
 __lua__
--- globals
+-- globals and menu state
 pizza={}
 utensils={}
 score=0
@@ -16,14 +16,33 @@ down=1
 right=2
 left=3
 
--- setup stuff
-function _init()
-	make_pizza()
-	utensils_init()
+function _init() menu_init() end
+
+function menu_init() 
+	_update=menu_update
+	_draw=menu_draw
 end
 
--- update logic
-function _update()
+function menu_update()
+	if (btnp(4)) game_init() --play the game
+end
+
+function menu_draw()
+	cls(1)
+	print("press o button to play",20,60)
+	print("hay que hacer graficos",20,80)
+	print("para esto",20,90)
+end
+-->8
+-- gameplay state
+function game_init()
+	make_pizza()
+	utensils_init()
+	_update=game_update
+	_draw=game_draw
+end
+
+function game_update() 
 	if not (game_over) then
 		move_pizza()
 		pizza_boundary_check()
@@ -35,8 +54,7 @@ function _update()
 	end
 end
 
--- update graphics on screen
-function _draw()
+function game_draw() 
 	cls(1)
 	draw_pizza()
 	draw_utensils()
@@ -45,7 +63,11 @@ function _draw()
 end
 
 -->8
--- player functions
+-- tab 2
+-->8
+-- tab 3
+-->8
+-- tab 4 (player functions)
 function make_pizza()
 	pizza.x=56
 	pizza.y=56
@@ -99,7 +121,7 @@ function pizza_collision_chk()
 	end
 end
 -->8
--- enemy functions
+-- tab 5 (enemy functions)
 function utensils_init()
 	local knife={}
 	knife.sprite=2
@@ -190,7 +212,7 @@ function draw_utensils()
 	end
 end
 -->8
--- gui functions
+-- tab 6 (gui functions)
 function update_score()
 	if (frame_count%59==0) score+=1	
 end
@@ -205,7 +227,7 @@ function debug()
 	--print("pizza hitboxes: "..#pizza.hitboxes,0,20,10)
 end
 -->8
--- other functions
+-- tab 7 (other functions)
 function overlap_exists(player_x,player_y,player_hb,enemy_x,enemy_y,enemy_hb)
 	if (
 		player_x+player_hb.x<=enemy_x+enemy_hb.x+enemy_hb.w
