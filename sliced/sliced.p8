@@ -29,7 +29,7 @@ end
 
 function menu_draw()
 	cls(1)
-	print("press o button to play",20,60)
+	print("press 🅾️ button to play",20,60)
 	print("hay que hacer graficos",20,80)
 	print("para esto",20,90)
 end
@@ -43,15 +43,13 @@ function game_init()
 end
 
 function game_update() 
-	if not (game_over) then
-		move_pizza()
-		pizza_boundary_check()
-		move_utensils()
-		pizza_collision_chk()
-		update_utensils()
-		update_score()
-		update_frame_count()
-	end
+	move_pizza()
+	pizza_boundary_check()
+	move_utensils()
+	pizza_collision_chk()
+	update_utensils()
+	update_score()
+	update_frame_count()
 end
 
 function game_draw() 
@@ -63,14 +61,21 @@ function game_draw()
 end
 
 -->8
--- tab 2
--- game over state
-function gameover_update()
-    if (btnp(4)) game_init() -- restart the game
+-- tab 2 (game over state)
+function gameover_update()    
+    if (btnp(4)) then
+        pizza={}
+        utensils={}
+        score=0
+        game_over=false
+        frame_count=0
+        game_init() -- restart the game
+    end
 end
 
 function gameover_draw()
     print("game over",44,64)
+    print("press 🅾️ to try again",24,72)
 end
 -->8
 -- tab 3
