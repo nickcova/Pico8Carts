@@ -64,6 +64,13 @@ end
 
 -->8
 -- tab 2
+-- game over state
+function gameover_update()
+end
+
+function gameover_draw()
+    print("game over",44,64)
+end
 -->8
 -- tab 3
 -->8
@@ -79,16 +86,11 @@ function make_pizza()
 end
 
 function draw_pizza()
-	if(btn(0)) then 
-		pizza.sprite=18
-	elseif(btn(1)) then 
-		pizza.sprite=20
-	elseif(btn(2)) then 
-		pizza.sprite=22
-	elseif(btn(3)) then 
-		pizza.sprite=24
-	else
-		pizza.sprite=16
+	if(btn(0)) then pizza.sprite=18
+	elseif(btn(1)) then pizza.sprite=20
+	elseif(btn(2)) then pizza.sprite=22
+	elseif(btn(3)) then pizza.sprite=24
+	else pizza.sprite=16
 	end
 
 	spr(pizza.sprite,pizza.x,pizza.y,2,2)
@@ -103,9 +105,9 @@ end
 
 function pizza_boundary_check()
 	if (pizza.x<=0) pizza.x=0
-	if (pizza.x+16>=128) pizza.x=120
+	if (pizza.x>=112) pizza.x=112
 	if (pizza.y<=0) pizza.y=0
-	if (pizza.y+16>=128) pizza.y=120
+	if (pizza.y>=112) pizza.y=112
 end
 
 function pizza_collision_chk()
@@ -117,7 +119,11 @@ function pizza_collision_chk()
 			end			
 		end
 		
-		if (game_over) break
+		if (game_over) then
+            _update=gameover_update
+	        _draw=gameover_draw
+            break
+        end
 	end
 end
 -->8
@@ -160,7 +166,8 @@ function update_utensils()
 		knife.y=starting_position.y
 		knife.speed=2
 		knife.direction=starting_position.direction
-		knife.hitbox={x=0,y=2,w=8,h=3}
+        if (knife.direction==up or knife.direction==down) knife.hitbox={x=0,y=2,w=3,h=8}
+		if (knife.direction==left or knife.direction==right) knife.hitbox={x=2,y=0,w=8,h=3}
 		add(utensils,knife)
 
 		spawn_utensil = false
@@ -230,8 +237,8 @@ end
 -- tab 7 (other functions)
 function overlap_exists(player_x,player_y,player_hb,enemy_x,enemy_y,enemy_hb)
 	if (
-		player_x+player_hb.x<=enemy_x+enemy_hb.x+enemy_hb.w
-		and player_x+player_hb.x+player_hb.w>=enemy_x+enemy_hb.x
+		player_x+player_hb.x+1<=enemy_x+enemy_hb.x+enemy_hb.w
+		and player_x+player_hb.x+player_hb.w-2>=enemy_x+enemy_hb.x
 		and player_y+player_hb.y<=enemy_y+enemy_hb.y+enemy_hb.h
 		and player_y+player_hb.y+player_hb.h>=enemy_y+enemy_hb.y+enemy_hb.h
 	) then
@@ -242,10 +249,8 @@ function overlap_exists(player_x,player_y,player_hb,enemy_x,enemy_y,enemy_hb)
 end
 
 function update_frame_count()
-	if (frame_count<32767) then
-		frame_count+=1
-	else
-		frame_count=0
+	if (frame_count<32767) then frame_count+=1
+	else frame_count=0
 	end
 end
 __gfx__
