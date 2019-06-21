@@ -66,6 +66,7 @@ end
 -- tab 2
 -- game over state
 function gameover_update()
+    if (btnp(4)) game_init() -- restart the game
 end
 
 function gameover_draw()
@@ -80,9 +81,10 @@ function make_pizza()
 	pizza.y=56
 	pizza.sprite=16
 	pizza.speed=2
-	pizza.hitboxes={}
-	add(pizza.hitboxes,{x=0,y=0,w=16,h=10})
-	add(pizza.hitboxes,{x=3,y=6,w=8,h=6})
+    pizza.vertices={}
+    add(pizza.vertices, {x=1,y=1})
+    add(pizza.vertices, {x=14,y=1})
+    add(pizza.vertices, {x=7,y=14})
 end
 
 function draw_pizza()
@@ -111,14 +113,23 @@ function pizza_boundary_check()
 end
 
 function pizza_collision_chk()
-	for enemy in all(utensils) do
-		for hit in all(pizza.hitboxes) do
-			if (overlap_exists(pizza.x,pizza.y,hit,enemy.x,enemy.y,enemy.hitbox)) then
-				game_over=true
-				break
-			end			
-		end
-		
+	for enemy in all(utensils) do 
+        local enemy_vertices={} -- vertices belonging to an enemy's hitbox
+        add(enemy_vertices,{x=enemy.x+enemy.hitbox.xoff, y=enemy.y+enemy.hitbox.yoff})
+        add(enemy_vertices,{x=enemy.x+enemy.hitbox.xoff+enemy.hitbox.w, y=enemy.y+enemy.hitbox.yoff})
+        add(enemy_vertices,{x=enemy.x+enemy.hitbox.xoff, y=enemy.y+enemy.hitbox.yoff+enemy.hitbox.h})
+        add(enemy_vertices,{x=enemy.x+enemy.hitbox.xoff+enemy.hitbox.w, y=enemy.y+enemy.hitbox.yoff+enemy.hitbox.h})
+
+        for vertices in all(enemy_vertices) do
+            if (is_inside_area(pizza.x+pizza.vertices[1].x,pizza.y+pizza.vertices[1].y,
+                                pizza.x+pizza.vertices[2].x,pizza.y+pizza.vertices[2].y,
+                                pizza.x+pizza.vertices[3].x,pizza.y+pizza.vertices[3].y,
+                                vertices.x, vertices.y)) then
+                game_over=true
+		        break              
+            end
+        end
+
 		if (game_over) then
             _update=gameover_update
 	        _draw=gameover_draw
@@ -135,7 +146,7 @@ function utensils_init()
 	knife.y=flr(rnd(120))  --60 es la mitad
 	knife.speed=2
 	knife.direction=right --first one goes right
-	knife.hitbox={x=0,y=2,w=8,h=3}	
+	knife.hitbox={xoff=0,yoff=3,w=8,h=2}	
 	add(utensils,knife)
 end
 
@@ -152,7 +163,7 @@ function move_utensils()
 end
 
 function update_utensils()
-	-- Check if I have to add a new utensil
+	-- check if i have to add a new utensil
 	if (#utensils<=max_utensils) then
 		if (frame_count>0 and frame_count%spawn_wait==0) spawn_utensil=true
 	end	
@@ -166,8 +177,8 @@ function update_utensils()
 		knife.y=starting_position.y
 		knife.speed=2
 		knife.direction=starting_position.direction
-        if (knife.direction==up or knife.direction==down) knife.hitbox={x=0,y=2,w=3,h=8}
-		if (knife.direction==left or knife.direction==right) knife.hitbox={x=2,y=0,w=8,h=3}
+        if (knife.direction==up or knife.direction==down) knife.hitbox={xoff=3,yoff=0,w=2,h=8}
+		if (knife.direction==left or knife.direction==right) knife.hitbox={xoff=0,yoff=3,w=8,h=2}
 		add(utensils,knife)
 
 		spawn_utensil = false
@@ -230,22 +241,21 @@ end
 
 function debug()
 	print("utensils: "..#utensils,0,0,10)
-	--print("game_over: "..tostr(game_over),0,10,10)
-	--print("pizza hitboxes: "..#pizza.hitboxes,0,20,10)
 end
 -->8
 -- tab 7 (other functions)
-function overlap_exists(player_x,player_y,player_hb,enemy_x,enemy_y,enemy_hb)
-	if (
-		player_x+player_hb.x+1<=enemy_x+enemy_hb.x+enemy_hb.w
-		and player_x+player_hb.x+player_hb.w-2>=enemy_x+enemy_hb.x
-		and player_y+player_hb.y<=enemy_y+enemy_hb.y+enemy_hb.h
-		and player_y+player_hb.y+player_hb.h>=enemy_y+enemy_hb.y+enemy_hb.h
-	) then
-		return true
-	end
-	
-	return false	
+-- checks if a point (ux,uy) is inside a triangle
+function is_inside_area(px1,py1,px2,py2,px3,py3,ux,uy)
+    local pizza_area=triangle_area(px1,py1,px2,py2,px3,py3)
+    local sub1=triangle_area(ux,uy,px2,py2,px3,py3)
+    local sub2=triangle_area(px1,py1,ux,uy,px3,py3)
+    local sub3=triangle_area(px1,py1,px2,py2,ux,uy)
+    return (pizza_area==sub1+sub2+sub3)
+end
+
+-- calculates the area of a triangle
+function triangle_area(x1,y1,x2,y2,x3,y3)
+    return abs((x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2))/2)
 end
 
 function update_frame_count()
